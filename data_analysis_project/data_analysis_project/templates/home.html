@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Analysis and Visualization</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark">
+
+    <!-- Main Container -->
+    <div class="container mt-5 p-1  rounded">
+<div class="text-center">
+    <h1 class="fw-bolder display-5 mb-2" style="color: #E8F9FD;">Data Analysis and Visualization</h1>
+    <p class="mb-4 fw-bolder"
+    style="color: #59CE8F;">By LAMRINI Hicham and HAJJIRI Oussama</p>
+</div>
+        <!-- Error Display -->
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+            <strong>Error:</strong> {{ error }}
+        </div>
+        {% endif %}
+
+        <!-- File Upload Section -->
+        <div class="border p-4 mb-4 bg-dark rounded shadow-sm" >
+            <h3 class="h5 text-light mb-3">Step 1: Upload Your Data <span style="color: #59CE8F;">&</span> Perform Analysis</h3>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="file_upload" value="true" style="background-color: #E8F9FD;">
+                <div class="mb-3">
+                    <label for="file" class="form-label text-light">Upload Excel File</label>
+                    <input type="file" name="file" class="form-control" required>
+                </div>
+                <button type="submit" class="btn fw-bolder" style="background-color: #59CE8F; border-color: #59CE8F;">
+                    Upload
+                </button>
+            </form>
+        </div>
+
+        {% if data_preview %}
+        <!-- Data Preview Section -->
+        <div class="border p-4 mb-4 rounded shadow-sm" style="background-color: #E8F9FD; border-color: #000000;">
+            <h3 class="h5 text-dark mb-3" >Data Preview</h3>
+            <div class="table-responsive" style="background-color: #E8F9FD; border-color: #000000;">
+                {{ data_preview|safe }}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if numeric_cols %}
+        <!-- Statistics and Visualization Section -->
+        <div class="border p-4 mb-4 bg-dark rounded shadow-sm">
+            <h3 class="h5 text-light mb-3">Step 2: Perform Analysis</h3>
+
+            <!-- Statistics Form -->
+            <form method="post" class="mb-4">
+                {% csrf_token %}
+                <input type="hidden" name="calculate_stats" value="true">
+                <div class="mb-3">
+                    <label for="selected_column" class="form-label">Select Numeric Column</label>
+                    <select name="selected_column" class="form-select">
+                        {% for col in numeric_cols %}
+                        <option value="{{ col }}">{{ col }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn fw-bolder" style="background-color: #59CE8F; border-color: #59CE8F;">Calculate Statistics</button>
+            </form>
+
+            <!-- Visualization Form -->
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="generate_visualization" value="true">
+                <div class="mb-3">
+                    <label for="selected_column" class="form-label">Select Numeric Column for Y-axis</label>
+                    <select name="selected_column" class="form-select">
+                        {% for col in numeric_cols %}
+                        <option value="{{ col }}">{{ col }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="visualization_type" class="form-label">Select Visualization Type</label>
+                    <select name="visualization_type" class="form-select">
+                        <option value="Line Plot">Line Plot</option>
+                        <option value="Box Plot">Box Plot</option>
+                        <option value="Histogram">Histogram</option>
+                        <option value="KDE Plot">KDE Plot</option>
+                        <option value="Violin Plot">Violin Plot</option>
+                        <option value="Scatter Plot">Scatter Plot</option>
+                    </select>
+                </div>
+                <div id="scatter-column-section" class="mb-3 d-none">
+                    <label for="scatter_column" class="form-label">Select Numeric Column for X-axis (Scatter Plot)</label>
+                    <select name="scatter_column" class="form-select">
+                        {% for col in numeric_cols %}
+                        <option value="{{ col }}">{{ col }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn fw-bolder text-dark" style="background-color: #59CE8F; border-color: #59CE8F;">Generate Visualization</button>
+            </form>
+        </div>
+        {% endif %}
+
+        {% if stats %}
+        <!-- Statistics Display -->
+        <div class="border p-4 mb-4 rounded shadow-sm" style="background-color: #E8F9FD; border-color: #000000;">
+            <h3 class="h5 text-dark mb-3 fw-bolder">Statistics</h3>
+            <div class="row row-cols-1 row-cols-md-2 g-3">
+                {% for key, value in stats.items %}
+                <div class="col">
+                    <div class="card bg-light">
+                        <div class="card-body border" style="background-color: #E8F9FD;">
+                            <strong>{{ key }}:</strong> {{ value }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if visualization_chart %}
+        <!-- Visualization Display -->
+        <div class="text-center mb-4">
+            <h3 class="h5 text-dark mb-3">Visualization</h3>
+            <img src="data:image/png;base64,{{ visualization_chart }}" alt="Chart" class="img-fluid rounded shadow">
+        </div>
+        {% endif %}
+
+        <!-- Probability Distribution Section -->
+        <div class="border p-4 mb-4 rounded shadow-sm">
+            <h3 class="h5 text-light mb-3">Step 2: Generate Probability Distribution</h3>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="generate_distribution" value="true">
+                <div class="mb-3">
+                    <label for="column" class="form-label text-light">Select Numeric Column</label>
+                    <select name="column" class="form-select">
+                        {% for col in numeric_cols %}
+                        <option value="{{ col }}">{{ col }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="distribution_type" class="form-label text-light">Select Distribution Type</label>
+                    <select name="distribution_type" class="form-select">
+                        <option value="bernoulli">Bernoulli</option>
+                        <option value="binomial">Binomial</option>
+                        <option value="poisson">Poisson</option>
+                        <option value="uniform">Uniform</option>
+                        <option value="exponential">Exponential</option>
+                        <option value="normal">Normal</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="n" class="form-label text-light">n (for Binomial)</label>
+                    <input type="number" step="1" name="n" class="form-control" value="10">
+                </div>
+                <div class="mb-3">
+                    <label for="p" class="form-label text-light">p (for Binomial/Bernoulli)</label>
+                    <input type="number" step="0.01" name="p" class="form-control" value="0.5">
+                </div>
+                <div class="mb-3">
+                    <label for="lambda" class="form-label text-light">Lambda (for Poisson/Exponential)</label>
+                    <input type="number" step="0.01" name="lambda" class="form-control" value="1.0">
+                </div>
+                <div class="mb-3">
+                    <label for="a" class="form-label text-light">a (for Uniform)</label>
+                    <input type="number" step="0.01" name="a" class="form-control" value="0">
+                </div>
+                <div class="mb-3">
+                    <label for="b" class="form-label text-light">b (for Uniform)</label>
+                    <input type="number" step="0.01" name="b" class="form-control" value="1">
+                </div>
+                <button type="submit" class="btn text-dark fw-bolder" style="background-color: #59CE8F; border-color: #59CE8F;">Generate Distribution</button>
+            </form>
+        </div>
+
+        {% if distribution_chart %}
+        <!-- Probability Distribution Display -->
+        <div class="text-center mb-4">
+            <h3 class="h5 text-dark mb-3">Generated Probability Distribution</h3>
+            <img src="data:image/png;base64,{{ distribution_chart }}" alt="Distribution Chart" class="img-fluid rounded shadow">
+        </div>
+        {% endif %}
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Dynamic Parameter Visibility for Probability Distributions
+            const distributionType = document.querySelector('[name="distribution_type"]');
+            const fields = {
+                'n': document.querySelector('[name="n"]').parentElement,
+                'p': document.querySelector('[name="p"]').parentElement,
+                'lambda': document.querySelector('[name="lambda"]').parentElement,
+                'a': document.querySelector('[name="a"]').parentElement,
+                'b': document.querySelector('[name="b"]').parentElement,
+            };
+
+            distributionType.addEventListener('change', function () {
+                // Hide all fields initially
+                Object.values(fields).forEach(field => field.style.display = 'none');
+
+                // Show fields based on selected distribution
+                switch (this.value) {
+                    case 'binomial':
+                        fields['n'].style.display = 'block';
+                        fields['p'].style.display = 'block';
+                        break;
+                    case 'bernoulli':
+                        fields['p'].style.display = 'block';
+                        break;
+                    case 'poisson':
+                        fields['lambda'].style.display = 'block';
+                        break;
+                    case 'exponential':
+                        fields['lambda'].style.display = 'block';
+                        break;
+                    case 'uniform':
+                        fields['a'].style.display = 'block';
+                        fields['b'].style.display = 'block';
+                        break;
+                }
+            });
+            distributionType.dispatchEvent(new Event('change'));
+
+            // Scatter Plot Column Visibility
+            const visualizationType = document.querySelector('[name="visualization_type"]');
+            const scatterColumnSection = document.getElementById('scatter-column-section');
+
+            visualizationType.addEventListener('change', function () {
+                if (this.value === "Scatter Plot") {
+                    scatterColumnSection.classList.remove('d-none');
+                } else {
+                    scatterColumnSection.classList.add('d-none');
+                }
+            });
+            visualizationType.dispatchEvent(new Event('change'));
+        });
+    </script>
+</body>
+</html>

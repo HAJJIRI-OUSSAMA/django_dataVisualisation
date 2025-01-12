@@ -1,0 +1,6 @@
+=> to activate ENV 
+        \venv\Scripts\activate
+=> to run app 
+        cd data_analysis_project
+        python manage.py runserver
+  
